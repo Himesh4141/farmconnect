@@ -1,0 +1,17 @@
+import { useEffect,useRef,useState } from 'react';
+import { Heart,RefreshCw } from 'lucide-react';
+import { commerceRequest } from '../lib/commerce';
+import { type Product, money, quantityStep } from '../data/products';
+export type SavedProduct={id:string;product:Product|null};
+export function useSavedProducts(userId?:string){
+ const generation=useRef(0);
+ const [items,setItems]=useState<SavedProduct[]>([]),[busy,setBusy]=useState<string|null>(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0);
+ useEffect(()=>{generation.current++;let active=true;setBusy(null);setItems([]);setError('');if(userId)commerceRequest<{items:SavedProduct[]}>('/saved-products').then(data=>{if(active)setItems(data.items);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[userId,attempt]);
+ async function toggle(product:Product|{id:string}){if(busy||!userId)return;const current=generation.current;setBusy(product.id);setError('');try{const saved=items.some(i=>i.id===product.id);await commerceRequest('/saved-products/'+product.id,undefined,saved?'DELETE':'PUT');const result=await commerceRequest<{items:SavedProduct[]}>('/saved-products');if(current===generation.current)setItems(result.items);}catch(e){if(current===generation.current)setError(e instanceof Error?e.message:'Saved products could not be updated.');}finally{if(current===generation.current)setBusy(null);}}
+ return {items,busy,error,toggle,reload:()=>setAttempt(n=>n+1)};
+}
+export default function SavedProducts({saved,onAdd,onShop}:{saved:ReturnType<typeof useSavedProducts>;onAdd:(id:string,quantity:number)=>Promise<void>;onShop:()=>void}){
+ const [adding,setAdding]=useState(false),[addError,setAddError]=useState('');
+ async function add(product:Product){if(adding)return;setAdding(true);setAddError('');try{await onAdd(product.id,quantityStep(product));}catch(e){setAddError(e instanceof Error?e.message:'Could not add this product. Please retry.');}finally{setAdding(false);}}
+ return <section className="fc-account"><Heart size={28}/><h2 id="dialog-title">Your saved harvest.</h2><p>Keep favourites here. Availability and prices are checked again when you add them to your basket.</p><button className="fc-account-switch" onClick={saved.reload}><RefreshCw size={16}/> Refresh saved products</button>{addError&&<p className="fc-order-error" role="alert">{addError}</p>}{saved.error&&<p className="fc-order-error" role="alert">{saved.error}</p>}{!saved.items.length&&<p>No saved products yet. Tap the heart beside a product to save it.</p>}{saved.items.map(row=><article className="fc-saved-product" key={row.id}>{row.product?<><img src={row.product.image} alt=""/><div><h3>{row.product.name}</h3><p>{row.product.farmName}</p><strong>{money(row.product.pricePaise)} / {row.product.saleMode==='weight'?'kg':row.product.unit}</strong><div className="fc-profile-actions"><button disabled={adding||row.product.stock<quantityStep(row.product)} onClick={()=>void add(row.product!)}>{row.product.stock<quantityStep(row.product)?'Currently sold out':'Add to basket'}</button></div></div></>:<p>This saved listing is unavailable.</p>}<button className="fc-profile-icon" aria-label={'Unsave '+(row.product?.name??'unavailable product')} disabled={saved.busy!==null} onClick={()=>void saved.toggle({id:row.id})}><Heart size={18} fill="currentColor"/></button></article>)}<button className="fc-primary" onClick={onShop}>Continue shopping</button></section>;
+}

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: farmconnect
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_MODE
+        value: demo
+      - key: COURIER_MODE
+        value: demo
+      - key: CHECKOUT_ENABLED
+        value: 'true'
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: '4000'
+      - key: TRUST_PROXY
+        value: render
+      - key: APP_ORIGIN
+        sync: false
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false

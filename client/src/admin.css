@@ -1,0 +1,59 @@
+/* Admin workspace: shares Farmconnect's green palette and accessible controls. */
+.fc-dialog[data-kind="admin"]{width:min(1240px,calc(100vw - 32px));max-height:calc(100dvh - 24px);border-radius:24px}
+.fc-account.ac-console{max-width:none;padding:28px 32px 40px;background:#f7f9f2}
+.ac-heading{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:22px}
+.ac-heading h2{font-size:clamp(25px,3vw,39px);letter-spacing:-1.2px;margin:10px 0}
+.ac-heading p{margin:0;font-size:14px}
+.ac-console button{font:inherit;cursor:pointer}
+.ac-console button:disabled{opacity:.5;cursor:not-allowed}
+.ac-console button:focus-visible,.ac-console input:focus-visible,.ac-console select:focus-visible{outline:3px solid #8eac57;outline-offset:3px}
+.ac-refresh{display:flex;align-items:center;gap:8px;background:white;border:1px solid #d7e0ce;border-radius:12px;padding:12px 16px;color:#244732}
+.ac-nav{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;padding:7px;background:#eaf0e3;border:1px solid #dfe7d5;border-radius:18px;margin-bottom:24px}
+.ac-nav button{display:flex;flex-direction:column;align-items:center;gap:8px;border:0;background:transparent;padding:14px 8px;border-radius:12px;color:#536849;font-size:12px;font-weight:650;transition:background .16s,color .16s}
+.ac-nav button[aria-pressed="true"]{background:#243f2d;color:#e6f5ba;box-shadow:0 3px 9px #243f2d19}
+.ac-content{animation:ac-enter .18s ease-out}
+.ac-content>p{font-size:14px;max-width:850px}
+.ac-mode{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:14px;font-weight:650;margin:8px 0 22px}
+.ac-mode small{margin-left:auto;font-size:12px;font-weight:400}
+.ac-dot{width:9px;height:9px;flex:0 0 9px;background:#739b41;border-radius:50%;display:inline-block}
+.ac-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:20px 0}
+.ac-stats button{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;text-align:left;padding:20px 22px;background:white;border:1px solid #dfe6d7;border-radius:18px;color:#254531;transition:transform .16s,box-shadow .16s}
+.ac-stats button:hover{transform:translateY(-2px);box-shadow:0 6px 18px #26492e12}
+.ac-stats strong{grid-column:1;grid-row:2;font-size:34px;letter-spacing:-1px}
+.ac-stats span{grid-column:1;grid-row:3;font-size:13px;color:#65775b}
+.ac-stats button>svg:last-child{grid-column:2;grid-row:3}
+.ac-card{background:white;border:1px solid #dfe6d7;border-radius:18px;padding:22px;margin-bottom:16px;overflow-wrap:anywhere}
+.ac-card h3{font-size:19px;margin:0 0 10px}
+.ac-card p{font-size:13px;line-height:1.6;margin:9px 0}
+.ac-card small{font-size:12px;line-height:1.6;color:#6a7c60}
+.ac-card .fc-account-eyebrow{font-size:10px;display:block;margin-bottom:16px}
+.ac-two,.ac-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ac-attention{display:flex;justify-content:space-between;align-items:center;width:100%;gap:15px;background:transparent;border:0;border-bottom:1px solid #edf1e7;padding:13px 0;text-align:left;color:#415b39;font-size:13px!important}
+.ac-attention b{background:#edf4dd;padding:3px 9px;border-radius:7px}
+.ac-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:18px 0}
+.fc-account .ac-toolbar input,.fc-account .ac-toolbar select{margin:0;min-height:46px;width:auto;background:white;font-size:13px;border:1px solid #cedbc4;border-radius:12px;padding:12px}
+.fc-account .ac-toolbar input{flex:1;min-width:220px}
+.ac-pager{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;margin:24px 0 0;padding-top:16px;border-top:1px solid #dfe6d7}
+.ac-pager>div,.ac-buttons{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ac-pager button,.ac-buttons>button:not(.fc-primary){border:1px solid #cbd8c0;background:white;border-radius:9px;padding:10px 14px;color:#304e30}
+.ac-action{background:#f7f9f3;border:1px solid #dce5d1;border-radius:12px;padding:16px;margin-top:15px}
+.fc-account .ac-action label{font-size:13px}
+.fc-account .ac-action textarea{background:white;font-size:13px;resize:vertical}
+.ac-action .fc-primary{width:auto;font-size:12px;min-height:42px;margin:0}
+.ac-danger{background:#fff7f1;color:#934b32;border:1px solid #e9cbb8;border-radius:9px;padding:10px 13px;font-size:12px!important}
+.ac-listing{display:flex;gap:15px;align-items:center}
+.ac-listing img{width:70px;height:70px;border-radius:12px;object-fit:cover}
+.ac-listing h3{margin:4px 0 8px}
+.ac-badge{display:inline-block;padding:5px 9px;border-radius:7px;background:#eff4e7;color:#426034;font-size:11px;text-transform:capitalize}
+.ac-row{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.ac-notice{background:#eaf3d9;border:1px solid #c9dcb6;padding:14px 18px;border-radius:12px;font-size:13px}
+.ac-timeline{list-style:none;padding:0;margin:20px 0}
+.ac-timeline li{display:flex;gap:15px;padding:18px 0;border-bottom:1px solid #dfe6d7;overflow-wrap:anywhere}
+.ac-timeline .ac-dot{margin-top:5px}
+.ac-timeline strong{text-transform:capitalize;font-size:14px}
+.ac-timeline small{display:block;margin-top:6px;font-size:11px;color:#738369}
+.ac-timeline p{font-size:12px;margin:7px 0}
+.ac-console .fc-order-card{background:white}
+@keyframes ac-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:720px){.fc-account.ac-console{padding:20px 18px 30px}.ac-heading{align-items:flex-start}.ac-heading h2{font-size:27px}.ac-refresh{font-size:0;gap:0;padding:12px}.ac-nav{grid-template-columns:repeat(4,minmax(0,1fr))}.ac-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-two,.ac-catalog{grid-template-columns:1fr}.ac-mode small{margin-left:0;width:100%}.ac-toolbar>*{flex:1;min-width:130px}.ac-card{padding:18px}.ac-row{flex-wrap:wrap}.ac-heading p{font-size:12px}.fc-dialog[data-kind="admin"]{width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}}
+@media(prefers-reduced-motion:reduce){.ac-content{animation:none}.ac-stats button,.ac-nav button{transition:none}}

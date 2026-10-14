@@ -1,0 +1,15 @@
+import { amountLabel, orderLineTotal } from '../data/products';
+import { useState } from 'react';
+import { money } from '../data/products';
+
+import { marketplaceRequest, type FarmerOrder } from '../lib/marketplace';
+const labels:Record<string,string>={in_transit:'In transit',placed:'New order',confirmed:'Accepted',packed:'Packed',ready_for_pickup:'Ready for pickup',cancelled:'Cancelled',out_for_delivery:'With courier',delivered:'Delivered'};
+export {default as ProductForm} from './ProductEditor';
+export function FarmOrder({order,onSaved}:{order:FarmerOrder;onSaved:()=>void}){
+ const [busy,setBusy]=useState(false),[error,setError]=useState(''),[reason,setReason]=useState('');
+ const displayStatus=order.status;
+ const next:Record<string,string>={placed:'confirmed',confirmed:'packed',packed:'ready_for_pickup'};const target=next[order.status];
+ async function advance(){if(busy||!target)return;setBusy(true);setError('');try{await marketplaceRequest('/orders/'+order.id+'/status',{expectedStatus:order.status,status:target});onSaved();}catch(failure){setError(failure instanceof Error?failure.message:'Update failed.');}finally{setBusy(false);}}
+ async function reject(){if(busy)return;setBusy(true);setError('');try{await marketplaceRequest('/orders/'+order.id+'/reject',{reason});onSaved();}catch(e){setError(e instanceof Error?e.message:'Unable to reject.');}finally{setBusy(false);}}
+ return <article className="fc-order-card"><header><strong>{order.purchaseKind==='bulk_buyer'?'Bulk order · '+order.businessName:'Consumer order'}</strong><span>{order.deliveryMode==='demo'?'Demo · ':''}{labels[displayStatus]??displayStatus} · {new Date(order.createdAt).toLocaleString('en-IN')}</span></header><small>{order.id}</small><ul>{order.items.map(item=><li key={item.productId}><span>{item.name} · {amountLabel(item.quantity,item.saleMode,item.unit)}</span><strong>{money(orderLineTotal(item))}</strong></li>)}</ul><p><strong>Your farm’s order value: {money(order.totalPaise)}</strong></p><p>{order.address.name} · {order.address.phone}<br/>{order.address.line}, {order.address.city} {order.address.pincode}</p>{error&&<p className="fc-order-error" role="alert">{error}</p>}{target&&!['cancelled','delivered'].includes(order.orderStatus)&&<button className="fc-primary" disabled={busy} onClick={()=>void advance()}>{busy?'Saving…':target==='confirmed'?'Accept order':target==='packed'?'Mark packed':'Mark ready for pickup'}</button>}{order.status==='placed'&&!['cancelled','delivered'].includes(order.orderStatus)&&<div><label>Reason if unable to fulfil<textarea rows={2} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)}/></label><button className="fc-account-switch" disabled={busy||reason.trim().length<8} onClick={()=>{if(window.confirm('Reject only your farm’s items? Their reserved stock will be restored.'))void reject();}}>Reject my farm’s part and restore stock</button></div>}{order.rejectionReason&&<p>Rejection: {order.rejectionReason}</p>}{displayStatus==='ready_for_pickup'&&<p className="fc-order-note">Packed and ready. Open Shipments for pickup options and tracking.</p>}</article>;
+}

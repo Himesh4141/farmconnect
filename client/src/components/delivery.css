@@ -1,0 +1,24 @@
+.fc-shipment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,350px),1fr));gap:20px;align-items:start}
+.fc-shipment-grid .fc-order-card{margin:0;min-width:0}
+.fc-shipment-grid header{gap:12px;flex-wrap:wrap}.fc-shipment-grid header strong{display:flex;align-items:center;gap:8px;text-transform:capitalize}
+.fc-delivery{padding:20px;margin:18px 0;background:#f5f8ef;border:1px solid #e1e9d6;border-radius:18px;animation:fc-delivery-enter .25s ease-out}
+.fc-delivery-title{display:flex;gap:9px;align-items:center;color:#294b33;flex-wrap:wrap}
+.fc-demo-badge{font-size:10px;letter-spacing:1.2px;padding:5px 9px;border-radius:6px;background:#dfedc0;color:#38522b;font-weight:750;margin-left:auto}
+.fc-tracking-code{overflow-wrap:anywhere;font-size:11px!important;line-height:1.7!important;color:#73806a;margin:10px 0 18px!important}
+.fc-delivery-timeline{padding:0!important;margin:20px 0!important;list-style:none;display:grid!important;gap:0!important}
+.fc-delivery-timeline li{display:flex!important;position:relative;gap:12px;align-items:flex-start;padding:0 0 21px!important;border:0!important;color:#7d8875;font-size:13px}
+.fc-delivery-timeline li:last-child{padding-bottom:0!important}
+.fc-delivery-timeline li:not(:last-child):before{content:'';position:absolute;top:24px;bottom:0;left:11px;width:2px;background:#dfe7d5}
+.fc-delivery-timeline li.complete:before{background:#90ad6c}
+.fc-delivery-dot{flex:0 0 24px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#e5ebdd;font-size:10px;font-weight:700}
+.fc-delivery-timeline li.complete .fc-delivery-dot{background:#294c34;color:#efffd2}
+.fc-delivery-timeline li[aria-current=step] .fc-delivery-dot{box-shadow:0 0 0 4px #dae9c6}
+.fc-delivery-timeline li.complete strong{color:#294c34}
+.fc-delivery-timeline small{display:block;font-size:10px;line-height:1.6;margin-top:4px;font-weight:400}
+.fc-delivery>small{font-size:11px;line-height:1.6;display:block;color:#637158;border-top:1px solid #e1e9d6;padding-top:15px;margin-top:20px}
+.fc-preparation-events{border-top:1px solid #e5ebdc;padding-top:16px;margin-top:18px;font-size:12px}.fc-preparation-events summary{cursor:pointer;color:#49663b}.fc-preparation-events ol{line-height:1.8;padding-left:18px}
+.fc-order-tracking{margin-top:18px;border-top:1px solid #e5ebdc}.fc-order-tracking>div{margin-bottom:20px}
+.fc-delivery-address{border-left:3px solid #c8dda4;padding:4px 0 4px 16px;margin:20px 0}.fc-delivery-address p{font-size:13px;line-height:1.7}.fc-delivery-address strong{font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+@keyframes fc-delivery-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.fc-delivery{animation:none}}
+@media(max-width:600px){.fc-delivery{padding:16px}.fc-shipment-grid{gap:14px}.fc-demo-badge{margin-left:0}}

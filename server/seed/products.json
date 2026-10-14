@@ -1,0 +1,80 @@
+[
+  {
+    "id": "tomatoes",
+    "name": "Fresh vine tomatoes",
+    "farmName": "Sahyadri Growers",
+    "category": "Vegetables",
+    "unit": "1 kg",
+    "pricePaise": 4000,
+    "bulkPricePaise": 3400,
+    "bulkMin": 10,
+    "stock": 50,
+    "image": "https://images.unsplash.com/photo-1629398780406-7d549c3e278d?auto=format&fit=crop&w=700&q=85",
+    "photoCredit": "https://unsplash.com/photos/red-tomatoes-in-brown-woven-basket-3urBR8FpKlM"
+  },
+  {
+    "id": "onions",
+    "name": "Red onions",
+    "farmName": "Patil Family Farm",
+    "category": "Vegetables",
+    "unit": "1 kg",
+    "pricePaise": 3200,
+    "bulkPricePaise": 2700,
+    "bulkMin": 10,
+    "stock": 80,
+    "image": "https://images.unsplash.com/photo-1562746713-0c512f966832?auto=format&fit=crop&w=700&q=85",
+    "photoCredit": "https://unsplash.com/photos/red-onions-SPGtZ62qyyg"
+  },
+  {
+    "id": "spinach",
+    "name": "Fresh spinach",
+    "farmName": "Green Valley Farm",
+    "category": "Leafy greens",
+    "unit": "250 g",
+    "pricePaise": 2500,
+    "bulkPricePaise": 2000,
+    "bulkMin": 12,
+    "stock": 30,
+    "image": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=700&q=85",
+    "photoCredit": "https://unsplash.com/photos/green-leafy-vegetables-4jpNPu7IW8k"
+  },
+  {
+    "id": "bananas",
+    "name": "Sweet bananas",
+    "farmName": "Riverbend Growers",
+    "category": "Fruits",
+    "unit": "1 kg",
+    "pricePaise": 6000,
+    "bulkPricePaise": 5200,
+    "bulkMin": 10,
+    "stock": 45,
+    "image": "https://images.unsplash.com/photo-1558035579-a10d04acf787?auto=format&fit=crop&w=700&q=85",
+    "photoCredit": "https://unsplash.com/photos/yellow-bananas-lWrD_CskDBU"
+  },
+  {
+    "id": "potatoes",
+    "name": "Farm potatoes",
+    "farmName": "Patil Family Farm",
+    "category": "Vegetables",
+    "unit": "1 kg",
+    "pricePaise": 3500,
+    "bulkPricePaise": 2900,
+    "bulkMin": 10,
+    "stock": 70,
+    "image": "https://images.unsplash.com/photo-1508313880080-c4bef0730395?auto=format&fit=crop&w=700&q=85",
+    "photoCredit": "https://unsplash.com/photos/potatoes-LSZfNPVZjTw"
+  },
+  {
+    "id": "carrots",
+    "name": "Crunchy carrots",
+    "farmName": "Green Valley Farm",
+    "category": "Vegetables",
+    "unit": "500 g",
+    "pricePaise": 4500,
+    "bulkPricePaise": 3800,
+    "bulkMin": 10,
+    "stock": 40,
+    "image": "https://images.unsplash.com/photo-1445282768818-728615cc910a?auto=format&fit=crop&w=700&q=85",
+    "photoCredit": "https://unsplash.com/photos/carrots-on-table-eFFnKMiDMGc"
+  }
+]

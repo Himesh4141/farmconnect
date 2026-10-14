@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    init: true
+    env_file: ./server/.env.production
+    volumes:
+      - farmconnect-data:/app/server/data
+      - farmconnect-backups:/app/server/backups
+    networks:
+      farmconnect:
+        ipv4_address: 172.30.0.3
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    stop_grace_period: 60s
+  edge:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?Set your domain in the shell before starting Compose}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      farmconnect:
+        ipv4_address: 172.30.0.2
+    depends_on:
+      app:
+        condition: service_healthy
+networks:
+  farmconnect:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+volumes:
+  farmconnect-data:
+  farmconnect-backups:
+  caddy-data:
+  caddy-config:

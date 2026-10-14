@@ -1,0 +1,21 @@
+-- Replace only Farmconnect default illustrations. Farmer-supplied photo URLs are preserved.
+UPDATE products SET image='/produce/photos/tomatoes.jpg', photo_credit='Softeis · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/tomatoes.svg';
+UPDATE products SET image='/produce/photos/potatoes.jpg', photo_credit='Scott Bauer, USDA ARS · Public domain · Wikimedia Commons', revision=revision+1 WHERE image='/produce/potatoes.svg';
+UPDATE products SET image='/produce/photos/onions.jpg', photo_credit='Colin · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/onions.svg';
+UPDATE products SET image='/produce/photos/carrots.jpg', photo_credit='Evan-Amos · Public domain · Wikimedia Commons', revision=revision+1 WHERE image='/produce/carrots.svg';
+UPDATE products SET image='/produce/photos/brinjal.jpg', photo_credit='Joydeep · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/brinjal.svg';
+UPDATE products SET image='/produce/photos/capsicum.jpg', photo_credit='Kham Tran - www.khamtran.com · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/capsicum.svg';
+UPDATE products SET image='/produce/photos/cucumber.jpg', photo_credit='Stephen Ausmus, USDA ARS · Public domain · Wikimedia Commons', revision=revision+1 WHERE image='/produce/cucumber.svg';
+UPDATE products SET image='/produce/photos/cauliflower.jpg', photo_credit='Coyau · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/cauliflower.svg';
+UPDATE products SET image='/produce/photos/cabbage.jpg', photo_credit='Bill Tarpenning · Public domain · Wikimedia Commons', revision=revision+1 WHERE image='/produce/cabbage.svg';
+UPDATE products SET image='/produce/photos/pumpkin.jpg', photo_credit='Infrogmation of New Orleans · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/pumpkin.svg';
+UPDATE products SET image='/produce/photos/okra.jpg', photo_credit='Earth100 · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/okra.svg';
+UPDATE products SET image='/produce/photos/beetroot.png', photo_credit='BriannaWalther · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/beetroot.svg';
+UPDATE products SET image='/produce/photos/spinach.jpg', photo_credit='Nillerdk · CC BY 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/spinach.svg';
+UPDATE products SET image='/produce/photos/coriander.jpg', photo_credit='Thamizhpparithi Maari · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/coriander.svg';
+UPDATE products SET image='/produce/photos/mint.jpg', photo_credit='Evan-Amos · Public domain · Wikimedia Commons', revision=revision+1 WHERE image='/produce/mint.svg';
+UPDATE products SET image='/produce/photos/fenugreek.jpg', photo_credit='Thamizhpparithi Maari · CC BY-SA 4.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/fenugreek.svg';
+UPDATE products SET image='/produce/photos/bananas.jpg', photo_credit='TimothyPilgrim · CC BY-SA 3.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/bananas.svg';
+UPDATE products SET image='/produce/photos/apples.jpg', photo_credit='Abhijit Tembhekar from Mumbai, India · CC BY 2.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/apples.svg';
+UPDATE products SET image='/produce/photos/mangoes.jpg', photo_credit='Ivar Leidus · CC BY-SA 4.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/mangoes.svg';
+UPDATE products SET image='/produce/photos/lemons.jpg', photo_credit='Elena Chochkova · CC BY-SA 4.0 · Wikimedia Commons', revision=revision+1 WHERE image='/produce/lemons.svg';
