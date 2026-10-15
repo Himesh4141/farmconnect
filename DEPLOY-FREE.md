@@ -10,7 +10,7 @@ Sign in at https://dashboard.render.com and https://app.turso.tech. Use only the
 
 ## Deployment
 
-1. Create a new **libSQL** database in Turso, in the available region closest to the Render service (Singapore is preferred). Keep its URL and database token private. This is a fresh hosted database; the laptop database is not uploaded automatically.
+1. Create a new **libSQL** database in Turso, in Oregon (US West), matching the Render service. Keep its URL and database token private. This is a fresh hosted database; the laptop database is not uploaded automatically.
 2. Publish the prepared source to the owner's GitHub repository after reviewing the source bundle. Exclude secrets, databases, Android signing keys and test-account fixtures.
 3. Create a Render **Free** Docker web service from that repository, using the repository root and `Dockerfile`. `render.yaml` contains the settings. Use one service instance. No Render Postgres database or paid disk is needed.
 4. Set these environment values in Render's secret settings:
