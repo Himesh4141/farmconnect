@@ -43,7 +43,7 @@ function serialize(db, row, part) {
 }
 export function mountCourier(app, db, mode = 'disabled') {
   if (!['disabled', 'demo', 'delhivery'].includes(mode)) throw new Error('COURIER_MODE must be disabled or demo.');
-  if (mode === 'demo' && process.env.NODE_ENV === 'production') throw new Error('Courier demo is disabled in production.');
+  if (mode === 'demo' && process.env.NODE_ENV === 'production' && process.env.APP_MODE !== 'demo') throw new Error('Courier demo is disabled in production.');
   const enabled = mode === 'demo';
   const requireDemo = (_req, _res, next) => {
     if (!enabled) throw new ApiError(503, 'COURIER_NOT_CONFIGURED', 'Courier booking is unavailable. No pickup was requested. Enable the local delivery demo to test.');
