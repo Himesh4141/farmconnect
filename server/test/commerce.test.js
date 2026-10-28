@@ -183,6 +183,9 @@ test('hosted demo retains production security, rejects provider credentials and 
 });
 
 test('public demo integrates secure signup, weight checkout, farmer preparation and private delivery tracking',async t=>{
+  const previousEnvironment={NODE_ENV:process.env.NODE_ENV,APP_MODE:process.env.APP_MODE};
+  process.env.NODE_ENV='production';process.env.APP_MODE='demo';
+  t.after(()=>{for(const [key,value] of Object.entries(previousEnvironment)){if(value===undefined)delete process.env[key];else process.env[key]=value;}});
   const settings=readConfig({NODE_ENV:'production',APP_MODE:'demo',APP_ORIGIN:'https://farmconnect.example.test',COURIER_MODE:'demo',TRUST_PROXY:'loopback'});
   const f=await fixture(t,settings);
   const publicConfig=await f.call('/store/config');
