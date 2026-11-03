@@ -1,0 +1,51 @@
+{
+  "name": "farmconnect-api",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-29",
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "APP_MODE": "live",
+    "NODE_ENV": "production",
+    "COURIER_MODE": "disabled",
+    "CHECKOUT_ENABLED": "false",
+    "APP_ORIGIN": "https://farmconnect-himesh4141.pages.dev"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DATABASE",
+        "class_name": "FarmconnectDatabase"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "FarmconnectDatabase"
+      ]
+    }
+  ],
+  "env": {
+    "local": {
+      "name": "farmconnect-api-local",
+      "vars": {
+        "APP_ORIGIN": "http://localhost:8787",
+        "APP_MODE": "live",
+        "NODE_ENV": "development",
+        "COURIER_MODE": "disabled",
+        "CHECKOUT_ENABLED": "false"
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "DATABASE",
+            "class_name": "FarmconnectDatabase"
+          }
+        ]
+      }
+    }
+  },
+  "account_id": "958710c499dde27ae9abe0e7fbc795b6"
+}

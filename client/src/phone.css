@@ -18,3 +18,5 @@
 @keyframes fm-screen-in{from{opacity:.7;transform:translateX(14px)}to{opacity:1;transform:none}}@keyframes fm-screen-out{to{opacity:0;transform:translateX(12px)}}
 @media(max-width:360px){.fm-top{padding-inline:14px}.fm-hero{margin-inline:14px}.fm-categories,.fm-discovery{padding-inline:14px}.fm-product-grid{gap:9px}.fm-card-body{padding:10px 9px}.fm-card-buy strong{font-size:19px}.fm-mini-counter button{min-width:25px}.fm-logo>span{font-size:16px}.fm-hero h1{font-size:27px}.fm-hero h1 em{font-size:28px}.fm-detail-action .fc-primary{min-width:155px!important}.fm-weight-options{gap:7px}.fm-weight-options button{min-width:60px}}
 @media(prefers-reduced-motion:reduce){.fm-market *,.fm-screen,.fm-card-photo img,.fc-dialog.fm-screen{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.fc-app-loading{min-height:45vh;display:grid;place-items:center;padding:32px;color:#244431;background:#f6f8f0;font-size:18px}

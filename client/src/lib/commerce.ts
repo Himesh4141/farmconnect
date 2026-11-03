@@ -1,14 +1,12 @@
+import { requestJson } from './network';
 import type { Address, Order } from './orders';
 
 export type StoreConfig = { appMode?:'live'|'demo'; checkoutEnabled:boolean; courierMode:string; onlinePayments:boolean; paymentIsTest:boolean; deliveryFeePaise:number };
 export type SavedAddress = { id:string; label:string; address:Address; revision:number; isDefault:boolean; serviceable:boolean };
-export async function commerceRequest<T>(path:string, body?:unknown, method?:string):Promise<T> {
-  const response = await fetch('/api'+path,{method:method??(body?'POST':'GET'),credentials:'same-origin',cache:'no-store',
-    headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000)});
-  const result = await response.json();
-  if(!response.ok)throw new Error(result.error?.message??'Unable to complete this request. Please try again.');
-  return result;
+export function commerceRequest<T>(path:string, body?:unknown, method?:string):Promise<T> {
+  return requestJson<T>('/api'+path,{method:method??(body?'POST':'GET'),headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});
 }
+
 type PaymentReply = {razorpay_payment_id:string;razorpay_order_id:string;razorpay_signature:string};
 type RazorpayOptions = {key:string;order_id:string;amount:number;currency:string;name:string;description:string;
   theme:{color:string};handler:(reply:PaymentReply)=>void;modal:{ondismiss:()=>void};prefill:{name:string;contact:string}};

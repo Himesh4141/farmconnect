@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { assertOrderPaid } from './payment-ledger.js';
 import { ensureDemoPickup } from './courier.js';
 import { farmStatusSql } from './fulfillment.js';
@@ -85,8 +86,8 @@ export function mountFarmer(app,db,{courierMode='disabled'}={}){
   if(reason.length>200||(action==='remove'&&reason.length<8))throw new ApiError(400,'REASON_REQUIRED','Explain the stock reduction in 8–200 characters.');
   if(!Number.isSafeInteger(amount)||amount<1||!Number.isSafeInteger(revision)||revision<0)throw new ApiError(400,'INVALID_STOCK','Enter a positive quantity and refresh your listing.');
   const delta=action==='remove'?-amount:amount;
-  db.exec('BEGIN IMMEDIATE');
-  try{
+
+  const product = atomic(db, () => {
    const row=db.prepare('SELECT sale_mode,stock,stock_grams,revision,archived FROM products WHERE id=? AND farm_id=?').get(req.params.id,req.user.farmId);
    if(!row)throw new ApiError(404,'PRODUCT_NOT_FOUND','Your product was not found.');
    if(row.archived)throw new ApiError(409,'PRODUCT_ARCHIVED','Archived listings cannot receive more stock.');
@@ -95,15 +96,16 @@ export function mountFarmer(app,db,{courierMode='disabled'}={}){
    if(row[column]+delta<0||row[column]+delta>maximum)throw new ApiError(400,'STOCK_LIMIT','This change would make available stock negative or exceed its limit.');
    db.prepare("UPDATE products SET "+column+"="+column+"+?,revision=revision+1,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND farm_id=? AND revision=?").run(delta,req.params.id,req.user.farmId,revision);
    db.prepare('INSERT INTO inventory_adjustments(product_id,actor_id,sale_mode,quantity_change,previous_stock,new_stock,reason,created_at) VALUES (?,?,?,?,?,?,?,?)').run(req.params.id,req.user.id,row.sale_mode,delta,row[column],row[column]+delta,reason||'Harvest added',Date.now());
-   const product=db.prepare(`SELECT ${columns} FROM products WHERE id=?`).get(req.params.id);
-   db.exec('COMMIT');res.json({product});
-  }catch(error){db.exec('ROLLBACK');throw error;}
+   return db.prepare(`SELECT ${columns} FROM products WHERE id=?`).get(req.params.id);
+
+});
+  res.json({product});
  });
  app.get('/api/farmer/orders',...guard,approved,(req,res)=>res.json(farmerOrders(db,req.user.farmId,req.query)));
  app.post('/api/farmer/orders/:id/status',requireSameOrigin,...guard,approved,(req,res)=>{
   const status=req.body?.status,expected=req.body?.expectedStatus;
-  db.exec('BEGIN IMMEDIATE');
-  try{
+
+  atomic(db, () => {
    const row=db.prepare('SELECT ff.status,o.status AS overall FROM farm_fulfillments ff JOIN orders o ON o.id=ff.order_id WHERE ff.order_id=? AND ff.farm_id=?').get(req.params.id,req.user.farmId);
    if(!row)throw new ApiError(404,'ORDER_NOT_FOUND','This order does not belong to your farm.');
    assertOrderPaid(db,req.params.id);
@@ -116,8 +118,9 @@ export function mountFarmer(app,db,{courierMode='disabled'}={}){
     updateOrderAggregate(db,req.params.id);
    }
    if(status==='ready_for_pickup'&&courierMode==='demo')ensureDemoPickup(db,req.params.id,req.user.farmId,req.user.id);
-   db.exec('COMMIT');res.json({ok:true});
-  }catch(error){db.exec('ROLLBACK');throw error;}
+
+});
+  res.json({ok:true});
  });
 }
 

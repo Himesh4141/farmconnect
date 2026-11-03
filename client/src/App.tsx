@@ -1,7 +1,4 @@
-import MobileMarket,{ProductDetail} from './components/MobileMarket';
-import ConnectionHelp from './components/ConnectionHelp';
-import {useStoreNavigation,type Panel} from './lib/storeNavigation';
-import {Home,Grid2X2,Heart,ClipboardList,ArrowLeft} from 'lucide-react';
+import { timeoutSignal } from './lib/network';
 import SavedProducts,{useSavedProducts} from './components/SavedProducts';
 import HelpCenter from './components/HelpCenter';
 import LocationAssist from './components/LocationAssist';
@@ -35,7 +32,7 @@ import ProductCard from "./components/ProductCard";
 import { money, unitPrice, quantityStep, amountLabel, type Product } from "./data/products";
 import { ApiError, getCatalog, getCartQuote, type Catalog, type CartItem, type CartQuote } from "./lib/api";
 type Cart = Record<string, number>;
-
+type Panel = "saved" | "help" | "basket" | "location" | "account" | "checkout" | "orders" | "receipt" | "admin" | "farmer" | "business" | "access" | null;
 const CART_KEY = "farmconnect.cart.v1";
 const LOCATION_KEY = "farmconnect.location.v1";
 type QuoteState = {
@@ -101,9 +98,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All produce");
   const [sort, setSort] = useState("featured");
-  const navigation=useStoreNavigation(checkoutBusy);
-  const {panel,setPanel,mobile}=navigation;
-  const [authTarget,setAuthTarget]=useState<Panel>(null);
+  const [panel, setPanel] = useState<Panel>(null);
   const [closing, setClosing] = useState(false);
   const [pincode, setPincode] = useState("");
   const [draft, setDraft] = useState(pincode);
@@ -111,9 +106,6 @@ export default function App() {
   const dialog = useRef<HTMLDialogElement>(null);
   const timer = useRef<number | null>(null);
 
-  useEffect(()=>{if(auth.user&&authTarget){setPanel(authTarget,true);setAuthTarget(null);}},[auth.user,authTarget]);
-  useEffect(()=>{if(panel!=='account')setAuthTarget(null);if(panel==='receipt'&&!receipt)setPanel('orders',true);},[panel,receipt]);
-  useEffect(()=>{if(!auth.loading&&!auth.user&&panel&&['saved','help','checkout','orders','admin','business','access'].includes(panel)){setAuthTarget(panel);setPanel('account',true);}},[auth.loading,auth.user,panel]);
   const liveTick=useRefreshTick(!checkoutBusy);
   useEffect(()=>{if(!liveTick)return;const controller=new AbortController();getCatalog(controller.signal).then(data=>{if(!controller.signal.aborted)setCatalog(data);}).catch(()=>{});return()=>controller.abort();},[liveTick]);
   const products = catalog?.products ?? [];
@@ -236,13 +228,13 @@ export default function App() {
     });
   }
   async function addSavedProduct(id:string,quantity:number){
-    const fresh=await getCatalog(AbortSignal.timeout(15000));setCatalog(fresh);
+    const fresh=await getCatalog(timeoutSignal(15000));setCatalog(fresh);
     const product=fresh.products.find(item=>item.id===id);
     if(!product||product.stock<quantity)throw Error('This produce is no longer available in that quantity. Refresh your saved products.');
     if((cart[id]??0)+quantity>product.stock)throw Error('Your basket already contains the available quantity. Open your basket to review it.');
     setCart(current=>({...current,[id]:Math.min(product.stock,(current[id]??0)+quantity)}));openPanel('basket');
   }
-  async function repeatOrder(items:CartItem[]){const fresh=await getCatalog(AbortSignal.timeout(15000));setCatalog(fresh);setCart(Object.fromEntries(items.map(i=>[i.productId,i.quantity])));openPanel('basket');}
+  async function repeatOrder(items:CartItem[]){const fresh=await getCatalog(timeoutSignal(15000));setCatalog(fresh);setCart(Object.fromEntries(items.map(i=>[i.productId,i.quantity])));openPanel('basket');}
   function remove(id: string) {
     setCart((current) => { const next = { ...current }; delete next[id]; return next; });
   }
@@ -253,27 +245,24 @@ export default function App() {
     setClosing(false);
     setDraft(pincode);
     setError("");
-    setPanel(next,next==='receipt');
-    if(dialog.current)dialog.current.scrollTop=0;
+    setPanel(next);
   }
   function closePanel() {
     if (checkoutBusy || closing || !panel)
       return;
     setClosing(true);
     timer.current = window.setTimeout(() => {
-      navigation.back();
+      setPanel(null);
       setClosing(false);
       timer.current = null;
     }, reduceMotion() ? 0 : 180);
   }
-  function requestAccount(next:Exclude<Panel,null>){if(auth.user)openPanel(next);else{setAuthTarget(next);openPanel('account');}}
-  const selectedProduct=products.find(product=>product.id===navigation.productId);
   function browse(next = "All produce") {
     setCategory(categories.includes(next) ? next : "All produce");
     setQuery("");
     goTo("market");
   }
-  return (<div className="fc-app" data-mobile={mobile}>
+  return (<div className="fc-app">
     <aside
       className="fc-rail"
       aria-label="Store navigation"
@@ -398,11 +387,11 @@ export default function App() {
       </header>
 
       <main className="fc-main">
-        {!mobile&&<div className="fc-intro">
+        <div className="fc-intro">
           <span>
             <i /> A fresh way to shop, from the ground up.</span>
           <span>Farmers. Grower groups. You.</span>
-        </div>}
+        </div>
         {catalogStatus === "loading" && <section className="fc-service-state" role="status" aria-live="polite">
           <span className="fc-loading-ring" aria-hidden="true" />
           <h1>Loading the harvest.</h1>
@@ -411,7 +400,7 @@ export default function App() {
         {catalogStatus === "error" && <section className="fc-service-state" role="alert">
           <Store size={40} strokeWidth={1.4} />
           <h1>The market couldn’t load.</h1>
-<p>{catalogError}</p><ConnectionHelp retry={()=>setCatalogAttempt(n=>n+1)}/>
+          <p>{catalogError}</p>
           <button className="fc-primary" type="button" onClick={() => setCatalogAttempt((current) => current + 1)}>
             Try again <ArrowRight size={18} />
           </button>
@@ -424,8 +413,7 @@ export default function App() {
             Refresh catalogue <ArrowRight size={18} />
           </button>
         </section>}
-        {mobile&&catalogReady&&<MobileMarket products={products} cart={cart} tab={navigation.tab} onTab={navigation.setTab} pincode={pincode} onLocation={()=>openPanel('location')} onAccount={()=>openPanel('account')} onProduct={navigation.openProduct} onChange={changeQuantity} savedIds={saved.items.map(row=>row.id)} saving={saved.busy!==null} onSave={product=>auth.user?void saved.toggle(product):openPanel('account')} error={saved.error}/>}
-        {!mobile&&catalogReady && tomato && spinach && banana && <>
+        {catalogReady && tomato && spinach && banana && <>
         <section
           className="fc-hero"
           aria-labelledby="hero-title"
@@ -558,7 +546,7 @@ export default function App() {
               product={product}
               index={index}
               quantity={cart[product.id] ?? 0}
-              onChange={changeQuantity} onOpen={()=>navigation.openProduct(product.id)}
+              onChange={changeQuantity}
             />)}
           </div> : <div className="fc-empty">
             <Search size={35} />
@@ -624,11 +612,11 @@ export default function App() {
               <summary>Photography credits</summary>
               {products.map((product) => <a
                 key={product.id}
-                href="/produce/credits.html"
+                href={product.photoCredit}
                 target="_blank"
                 rel="noreferrer"
               >
-                {product.name} · Photo credit <ArrowUpRight size={12} />
+                {product.name} · Unsplash <ArrowUpRight size={12} />
               </a>)}
             </details>
           </div>
@@ -641,7 +629,7 @@ export default function App() {
       role="status"
     >
       {count} products in your basket.</p>
-    {count > 0 && !panel && <button
+    {count > 0 && <button
       className="fc-basket-dock"
       type="button"
       onClick={() => openPanel("basket")}
@@ -661,10 +649,9 @@ export default function App() {
       </span>
     </button>}
 
-    {mobile&&!panel&&<nav className="fm-bottom-nav" aria-label="Main app navigation">{[{name:'Home',icon:Home,active:navigation.tab==='home',action:()=>navigation.setTab('home')},{name:'Browse',icon:Grid2X2,active:navigation.tab==='browse',action:()=>navigation.setTab('browse')},{name:'Saved',icon:Heart,active:false,action:()=>requestAccount('saved')},{name:'Orders',icon:ClipboardList,active:false,action:()=>requestAccount('orders')},{name:'Account',icon:UserRound,active:false,action:()=>openPanel('account')}].map(item=><button key={item.name} aria-current={item.active?'page':undefined} onClick={item.action}><item.icon size={21} strokeWidth={item.active?2.4:1.7}/><span>{item.name}</span></button>)}</nav>}
     <dialog
       ref={dialog}
-      className={"fc-dialog"+(mobile?" fm-screen":"")}
+      className="fc-dialog"
       data-kind={panel ?? "basket"}
       data-closing={closing}
       aria-labelledby="dialog-title"
@@ -686,10 +673,9 @@ export default function App() {
           onClick={closePanel}
           aria-label="Close dialog" disabled={checkoutBusy}
         >
-          {mobile?<ArrowLeft size={22}/>:<X size={22} />}
+          <X size={22} />
         </button>
       </div>
-      {panel==='product'&&(selectedProduct?<ProductDetail key={selectedProduct.id} product={selectedProduct} quantity={cart[selectedProduct.id]??0} saved={saved.items.some(row=>row.id===selectedProduct.id)} saving={saved.busy!==null} onSave={()=>auth.user?void saved.toggle(selectedProduct):openPanel('account')} onChange={quantity=>changeQuantity(selectedProduct.id,quantity)} onBasket={()=>openPanel('basket')}/>:<div className="fc-account"><h2 id="dialog-title">This harvest is unavailable.</h2><p>The grower may have paused this listing. Browse the shop for available produce.</p><button className="fc-primary" onClick={closePanel}>Back to shopping</button></div>)}
       {panel === "basket" && <>
         <div className="fc-drawer-title">
           <span className="fc-eyebrow">YOUR GOOD FOOD COLLECTION</span>
@@ -790,7 +776,7 @@ export default function App() {
             onClick={closePanel}
           >Continue shopping <ArrowRight size={18} />
           </button>
-          {count > 0 && <button className="fc-primary" type="button" disabled={!quote || auth.loading} onClick={() => requestAccount("checkout")}>{auth.user ? "Continue to checkout" : "Sign in to checkout"}<ArrowRight size={18}/></button>}
+          {count > 0 && <button className="fc-primary" type="button" disabled={!quote || auth.loading} onClick={() => openPanel(auth.user ? "checkout" : "account")}>{auth.user ? "Continue to checkout" : "Sign in to checkout"}<ArrowRight size={18}/></button>}
           <p className="fc-demo-note">Choose your delivery details and payment at checkout.</p>
         </div>
       </>}
@@ -846,7 +832,7 @@ export default function App() {
       {panel === "saved" && auth.user && <SavedProducts saved={saved} onAdd={addSavedProduct} onShop={closePanel}/>}
       {panel === "help" && auth.user && <section className="fc-account"><h2 id="dialog-title">Help with your orders.</h2><HelpCenter/></section>}
       {panel === "account" && <AccountPanel auth={auth} onSaved={()=>openPanel('saved')} onHelp={()=>openPanel('help')} onApply={() => openPanel("access")} onFarmer={() => { window.location.href = "/farmer"; }} onBulk={() => openPanel("business")} onAdmin={() => openPanel("admin")} onOrders={() => openPanel("orders")} onCheckout={() => openPanel("checkout")} />}
-      {panel === "checkout" && auth.user && <CheckoutPanel mobile={mobile} summaryItems={quote?.items.map(item=>({...item,image:products.find(p=>p.id===item.productId)?.image??''}))??[]} user={auth.user} items={JSON.parse(itemsJson) as CartItem[]} subtotal={quote?.subtotalPaise ?? 0} pincode={pincode} onBusy={setCheckoutBusy} onBack={() => { setQuoteAttempt(value => value + 1); openPanel("basket"); }} onPlaced={(order) => {
+      {panel === "checkout" && auth.user && <CheckoutPanel user={auth.user} items={JSON.parse(itemsJson) as CartItem[]} subtotal={quote?.subtotalPaise ?? 0} pincode={pincode} onBusy={setCheckoutBusy} onBack={() => { setQuoteAttempt(value => value + 1); openPanel("basket"); }} onPlaced={(order) => {
         try { localStorage.removeItem(CART_KEY); } catch { /* In-memory cart still clears. */ }
         setCart({}); setReceipt(order); openPanel("receipt"); setCatalogAttempt(value => value + 1);
       }} />}

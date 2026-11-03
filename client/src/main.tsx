@@ -11,7 +11,6 @@ import "./index.css";
 import "./profiles.css";
 import "./shopping.css";
 import App from "./App";
-import "./phone.css";
 import FarmerPortal from "./components/FarmerPortal";
 const Root = /^\/delivery(?:\/|$)/.test(window.location.pathname) ? DeliveryPortal : /^\/farmer(?:\/|$)/.test(window.location.pathname) ? FarmerPortal : App;
 

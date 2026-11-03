@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { paging,choice } from './admin-support.js';
 import { createHash,randomBytes,randomUUID } from 'node:crypto';
 import { ApiError } from './pricing.js';
@@ -7,7 +8,8 @@ import { getCatalog } from './catalog.js';
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const selectApplication='SELECT a.*,u.email,u.name FROM access_applications a JOIN users u ON u.id=a.user_id';
 function event(db,application,actor,target,action,note){db.prepare('INSERT INTO access_events(application_id,actor_id,target_user_id,action,note,created_at) VALUES (?,?,?,?,?,?)').run(application,actor,target,action,note,Date.now());}
-function transaction(db,fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(error){db.exec('ROLLBACK');throw error;}}
+function transaction(db,fn){try { return atomic(db, () => {const result=fn();return result;
+}); } catch(error){throw error;}}
 function text(body,key,min,max){const value=typeof body?.[key]==='string'?body[key].trim():'';if(value.length<min||value.length>max)throw new ApiError(400,'INVALID_APPLICATION',`Enter ${key} using ${min}–${max} characters.`);return value;}
 export function mountAccess(app,db){
  const admin=[requireUser(db),(req,_res,next)=>{if(!isAdmin(db,req.user.id))throw new ApiError(403,'ADMIN_REQUIRED','Administrator access is required.');next();}];

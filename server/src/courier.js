@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { externalTracking } from './operations.js';
 import { randomUUID } from 'node:crypto';
 import { requireSameOrigin, requireUser } from './auth.js';
@@ -6,9 +7,9 @@ import { syncOrder } from './fulfillment.js';
 
 const nextStatus = { pickup_requested: 'picked_up', picked_up: 'in_transit', in_transit: 'out_for_delivery', out_for_delivery: 'delivered' };
 function transaction(db, fn) {
-  db.exec('BEGIN IMMEDIATE');
-  try { const result = fn(); db.exec('COMMIT'); return result; }
-  catch (error) { db.exec('ROLLBACK'); throw error; }
+
+  try { return atomic(db, () => { const result = fn();  return result;
+}); } catch (error) {  throw error; }
 }
 function fulfillment(db, orderId, farmId) {
   const row = db.prepare(`SELECT ff.*,o.status AS order_status,o.address_json,f.name AS farm_name

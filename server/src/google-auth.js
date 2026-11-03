@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { OAuth2Client } from 'google-auth-library';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { ApiError } from './pricing.js';
@@ -59,9 +60,9 @@ export function mountGoogleAuth(app,db,config,provider=config.google?googleProvi
     const pending=db.prepare('SELECT * FROM oauth_attempts WHERE ticket_hash=? AND expires_at>?').get(digest(ticket),Date.now());
     if(!pending||pending.challenge!==createHash('sha256').update(verifier).digest('base64url'))throw new ApiError(400,'INVALID_SIGN_IN','Sign-in expired or belongs to another device. Please try again.');
     const identity=JSON.parse(pending.identity_json);
-    db.exec('BEGIN IMMEDIATE');
+
     let user;
-    try {
+    try { atomic(db, () => {
       // Consume once in the same transaction as linking/account creation.
       db.prepare('DELETE FROM oauth_attempts WHERE state_hash=?').run(pending.state_hash);
       const existing=db.prepare('SELECT u.* FROM google_identities g JOIN users u ON u.id=g.user_id WHERE subject=?').get(identity.sub);
@@ -85,8 +86,9 @@ export function mountGoogleAuth(app,db,config,provider=config.google?googleProvi
         user=publicUser(db,db.prepare('SELECT * FROM users WHERE id=?').get(id));
       }
       if(pending.portal==='farmer'&&user.requestedAccountType!=='farmer'||pending.portal==='delivery'&&user.accountType!=='delivery'||pending.portal==='store'&&['farmer','delivery'].includes(user.requestedAccountType))throw new ApiError(403,'WRONG_WORKSPACE','Use the sign-in screen for your account: Shop, Farmer or Delivery.');
-      db.exec('COMMIT');
-    } catch(error){db.exec('ROLLBACK');db.prepare('DELETE FROM oauth_attempts WHERE state_hash=?').run(pending.state_hash);throw error;}
+
+
+}); } catch(error){db.prepare('DELETE FROM oauth_attempts WHERE state_hash=?').run(pending.state_hash);throw error;}
     startSession(db,req,res,user,pending.portal,config.production);res.json({user,path:home(pending.portal)});
   });
 }

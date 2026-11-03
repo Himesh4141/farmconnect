@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Heart, Check, ChevronDown, Leaf, Minus, Plus, Sprout } from 'lucide-react';
 import { amountLabel, money, unitPrice, type Product } from '../data/products';
 
-type Props = { product: Product; quantity: number; index?: number; saved?:boolean; saving?:boolean; onSave?:()=>void; onOpen?:()=>void; onChange: (id: string, change: number) => void };
+type Props = { product: Product; quantity: number; index?: number; saved?:boolean; saving?:boolean; onSave?:()=>void; onChange: (id: string, change: number) => void };
 const weights = [250, 500, 1000];
-export default function ProductCard({ product, quantity, index = 0, onChange, saved=false, saving=false, onSave, onOpen }: Props) {
+export default function ProductCard({ product, quantity, index = 0, onChange, saved=false, saving=false, onSave }: Props) {
   const weight = product.saleMode === 'weight';
   const [selected, setSelected] = useState(250);
   const [moreWeights, setMoreWeights] = useState(false);
@@ -26,7 +26,6 @@ export default function ProductCard({ product, quantity, index = 0, onChange, sa
   useEffect(() => { setImageFailed(false); }, [product.image]);
   return <article ref={card} className="fc-produce-card" data-visible={visible} data-in-basket={quantity > 0} style={{ animationDelay: `${Math.min(index, 5) * 40}ms` }}>
     <div className="fc-produce-photo">
-      {onOpen&&<button className="fc-open-product" onClick={onOpen} aria-label={'View '+product.name}/> }
       {imageFailed ? <div className="fc-produce-fallback"><Leaf size={40} /><span>{product.name}</span></div> : <img src={product.image} alt={product.name} loading="lazy" decoding="async" onError={() => setImageFailed(true)} />}
       <span className="fc-produce-tag">{product.category}</span>
       {quantity > 0 && <span className="fc-produce-added"><Check size={12} /> In basket</span>}

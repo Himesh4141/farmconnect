@@ -1,0 +1,1 @@
+{"name":"farmconnect-cloudflare","private":true,"type":"module","scripts":{"dev":"wrangler dev","check":"wrangler deploy --dry-run","deploy":"wrangler deploy"},"devDependencies":{"wrangler":"latest"}}

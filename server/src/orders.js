@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { paging,choice } from './admin-support.js';
 import { paymentSummary } from './payment-ledger.js';
 import { progress } from './fulfillment.js';
@@ -43,12 +44,12 @@ export function placeOrder(db, userId, body, deliveryMode='unconnected', payment
  const normalized = {address, items:body.items.map(item => ({productId:item?.productId,quantity:item?.quantity})).sort((a,b)=>String(a.productId).localeCompare(String(b.productId))),expectedSubtotalPaise:body.expectedSubtotalPaise};
  if(method==='razorpay')normalized.paymentMethod=method;
  const hash = createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
- db.exec('BEGIN IMMEDIATE');
- try {
+
+ try { return atomic(db, () => {
   const existing = db.prepare('SELECT * FROM orders WHERE user_id = ? AND request_key = ?').get(userId,key);
   if (existing) {
    if (existing.request_hash !== hash) throw new ApiError(409,'REQUEST_CHANGED','This checkout request was already used. Open a new checkout.');
-   const order = serialize(db,existing); db.exec('COMMIT'); return {order,replayed:true};
+   const order = serialize(db,existing);  return {order,replayed:true};
   }
   if(method==='razorpay'&&db.prepare("SELECT COUNT(*) AS n FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE o.user_id=? AND o.status!='cancelled' AND p.state IN ('creating','pending','review')").get(userId).n>=3)throw new ApiError(429,'PENDING_ORDER_LIMIT','Complete or cancel an unpaid order before starting another.');
   if(db.prepare('SELECT checkout_paused FROM store_controls WHERE id=1').get().checkout_paused)throw new ApiError(503,'CHECKOUT_UNAVAILABLE','Ordering is temporarily paused. Existing orders are still being handled.');
@@ -68,8 +69,9 @@ export function placeOrder(db, userId, body, deliveryMode='unconnected', payment
   }
   if(method==='razorpay')db.prepare('INSERT INTO order_payments(order_id,amount_paise,expires_at,created_at,updated_at,is_test) VALUES (?,?,?,?,?,?)').run(id,quote.subtotalPaise,Date.now()+15*60000,Date.now(),Date.now(),paymentConfig.isTest?1:0);
   const order = serialize(db,db.prepare('SELECT * FROM orders WHERE id = ?').get(id));
-  db.exec('COMMIT'); return {order,replayed:false};
- } catch(error) {db.exec('ROLLBACK');throw error;}
+   return {order,replayed:false};
+
+}); } catch(error) {throw error;}
 }
 export function mountOrders(app,db,{courierMode='disabled',payment=null,checkoutEnabled=true}={}) {
  app.get('/api/orders',requireUser(db),(req,res)=> {

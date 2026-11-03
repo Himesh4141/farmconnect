@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { ApiError } from './pricing.js';
 export function audit(db, actor, action, target, reason='') {
   db.prepare('INSERT INTO admin_events(actor_id,action,target,reason,created_at) VALUES (?,?,?,?,?)').run(actor,action,target,reason,Date.now());
@@ -8,8 +9,9 @@ export function reasonFrom(body) {
   return reason;
 }
 export function transaction(db,fn) {
-  db.exec('BEGIN IMMEDIATE');
-  try {const result=fn();db.exec('COMMIT');return result;}catch(error){db.exec('ROLLBACK');throw error;}
+
+  try { return atomic(db, () => {const result=fn();return result;
+}); } catch(error){throw error;}
 }
 export function paging(query) {
   const page=Number(query.page??1),limit=Number(query.limit??20);

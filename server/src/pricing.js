@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { findProduct } from "./catalog.js";
 
 export class ApiError extends Error {
@@ -34,8 +35,8 @@ export function quoteCart(db, body) {
   }
 
   // One read transaction gives every line a consistent database snapshot.
-  db.exec("SAVEPOINT cart_quote");
-  try {
+
+  try { return atomic(db, () => {
     let subtotalPaise = 0;
     let savingsPaise = 0;
     const items = body.items.map(({ productId, quantity }) => {
@@ -54,10 +55,11 @@ export function quoteCart(db, body) {
       if(lineTotalPaise<1)invalid('Choose a larger weight for this price.');
       return { saleMode:product.saleMode, productId, name: product.name, unit: product.unit, quantity, unitPricePaise, lineTotalPaise, bulkApplied };
     });
-    db.exec("RELEASE cart_quote");
+
     return { currency: "INR", items, subtotalPaise, savingsPaise, deliveryFeePaise: null };
-  } catch (error) {
-    db.exec("ROLLBACK TO cart_quote; RELEASE cart_quote");
+
+}); } catch (error) {
+
     throw error;
   }
 }

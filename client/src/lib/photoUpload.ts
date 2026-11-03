@@ -1,3 +1,4 @@
+import { timeoutSignal } from './network';
 export async function uploadProductPhoto(file: File): Promise<string> {
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('Choose a JPEG, PNG or WebP photo.');
  if(file.size>10*1024*1024) throw new Error('Choose a photo smaller than 10 MB.');
@@ -11,7 +12,7 @@ export async function uploadProductPhoto(file: File): Promise<string> {
   blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',0.8));
  } finally {bitmap.close();}
  if(!blob||blob.size>1024*1024)throw new Error('This photo is too large after resizing. Choose a smaller photo.');
- const response=await fetch('/api/farmer/photos',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'image/jpeg'},body:blob,signal:AbortSignal.timeout(30000)});
+ const response=await fetch('/api/farmer/photos',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'image/jpeg'},body:blob,signal:timeoutSignal(30000)});
  const result=await response.json().catch(()=>null);
  if(!response.ok)throw new Error(result?.error?.message||'Upload failed. Please try again.');
  return result.image;

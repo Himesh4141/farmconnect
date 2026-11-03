@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { registrationProfile, createProfile, profileFor } from './profiles.js';
 import { randomBytes, randomUUID, scrypt, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
@@ -31,15 +32,16 @@ export function startSession(db,req,res,user,portal,production=process.env.NODE_
   const previous=token(req,name), value=randomBytes(32).toString('hex'), now=Date.now();
   const ua=req.get('user-agent')||'';
   const device=ua.includes('FarmconnectAndroid/')?'Farmconnect Android':/Android|iPhone|iPad/.test(ua)?'Mobile browser':'Web browser';
-  db.exec('BEGIN IMMEDIATE');
-  try {
+
+  try { atomic(db, () => {
     if(previous)db.prepare('DELETE FROM sessions WHERE token_hash=?').run(digest(previous));
     db.prepare('DELETE FROM sessions WHERE expires_at<=?').run(now);
     db.prepare('INSERT INTO sessions VALUES (?,?,?)').run(digest(value),user.id,now+WEEK);
     db.prepare('INSERT INTO session_details VALUES (?,?,?,?)').run(digest(value),randomUUID(),device,now);
     securityEvent(db,user.id,'Signed in');
-    db.exec('COMMIT');
-  } catch(error){db.exec('ROLLBACK');throw error;}
+
+
+}); } catch(error){throw error;}
   res.cookie(name,value,{httpOnly:true,sameSite:'lax',secure:production,path:'/',maxAge:WEEK});
 }
 export function currentUser(db, req, portal) {
@@ -87,15 +89,16 @@ export function mountAuth(app, db, config={}) {
     const salt = randomBytes(16).toString('hex');
     const encoded = salt + ':' + (await hash(password, salt)).toString('hex');
     const user = { id: randomUUID(), name, email, role: 'customer', ...profile };
-    db.exec('BEGIN IMMEDIATE');
-    try {
+
+    try { atomic(db, () => {
       const result=db.prepare('INSERT INTO users VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(email) DO NOTHING').run(user.id,name,email,encoded,user.role,Date.now());
       if(!result.changes)throw new ApiError(409,'ACCOUNT_EXISTS','An account already uses this email. Please sign in.');
       createProfile(db,user.id,profile);
       if(deliverySignup)db.prepare("INSERT INTO delivery_partners(user_id,phone,status,created_at) VALUES (?,?,'pending',?)").run(user.id,phone,Date.now());
       Object.assign(user,profileFor(db,user.id));
-      db.exec('COMMIT');
-    } catch(error) { db.exec('ROLLBACK'); throw error; }
+
+
+}); } catch(error) {  throw error; }
     startSession(db, req, res, user,undefined,cookieOptions.secure);
     res.status(201).json({ user });
   });
@@ -134,8 +137,9 @@ export function mountAuth(app, db, config={}) {
     const [salt,expected]=row.password_hash.split(':');
     if(!timingSafeEqual(await hash(old,salt),Buffer.from(expected,'hex')))throw new ApiError(401,'INVALID_CREDENTIALS','Current password is incorrect.');
     const newSalt=randomBytes(16).toString('hex'), encoded=newSalt+':'+(await hash(next,newSalt)).toString('hex');
-    db.exec('BEGIN IMMEDIATE');
-    try {if(db.prepare('UPDATE users SET password_hash=? WHERE id=? AND password_hash=?').run(encoded,row.id,row.password_hash).changes!==1)throw new ApiError(409,'RETRY','Your account changed. Sign in again.');db.prepare('DELETE FROM sessions WHERE user_id=?').run(row.id);securityEvent(db,row.id,'Password changed; all previous sessions revoked');db.exec('COMMIT');}catch(error){db.exec('ROLLBACK');throw error;}
+
+    try { atomic(db, () => {if(db.prepare('UPDATE users SET password_hash=? WHERE id=? AND password_hash=?').run(encoded,row.id,row.password_hash).changes!==1)throw new ApiError(409,'RETRY','Your account changed. Sign in again.');db.prepare('DELETE FROM sessions WHERE user_id=?').run(row.id);securityEvent(db,row.id,'Password changed; all previous sessions revoked');
+}); } catch(error){throw error;}
     startSession(db,req,res,req.user,undefined,cookieOptions.secure);res.json({ok:true});
   });
 }

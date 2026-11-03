@@ -1,13 +1,14 @@
+import { requestJson } from '../lib/network';
 import { useEffect, useState } from 'react';
 export type Portal='store'|'farmer'|'delivery';
-export async function securityRequest(path:string,portal:Portal,body?:object) {
-  const response=await fetch('/api/auth/'+(portal==='store'?'':portal+'/')+path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(15000)});
-  const result=await response.json();if(!response.ok)throw new Error(result.error?.message||'Please try again.');return result;
+export function securityRequest(path:string,portal:Portal,body?:object) {
+  return requestJson<any>('/api/auth/'+(portal==='store'?'':portal+'/')+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});
 }
+
 const encode=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 export default function GoogleSignIn({portal='store',link=false}:{portal?:Portal;link?:boolean}) {
   const [enabled,setEnabled]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
-  useEffect(()=>{let active=true;fetch('/api/auth/google/config').then(r=>r.json()).then(c=>{if(active)setEnabled(c.enabled);}).catch(()=>{});return()=>{active=false;};},[]);
+  useEffect(()=>{let active=true;requestJson<{enabled:boolean}>('/api/auth/google/config').then(c=>{if(active)setEnabled(c.enabled);}).catch(()=>{});return()=>{active=false;};},[]);
   async function start(){
     setBusy(true);setError('');
     try{
@@ -15,10 +16,14 @@ export default function GoogleSignIn({portal='store',link=false}:{portal?:Portal
       const challenge=encode(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
       sessionStorage.setItem('farmconnect.oauth.verifier',verifier);
       const result=await securityRequest('google/prepare','store',{portal,link,challenge,mobile:navigator.userAgent.includes('FarmconnectAndroid/')});
-      window.location.assign(result.url);
+      const destination = new URL(result.url);
+      if(destination.origin!=='https://accounts.google.com'||destination.pathname!=='/o/oauth2/v2/auth')throw new Error('Google sign-in could not start safely.');
+      window.location.assign(destination.href);
+      // Android opens Google in the system browser. Returning or cancelling must allow another attempt.
+      if(navigator.userAgent.includes('FarmconnectAndroid/'))setBusy(false);
     }catch(e){setError(e instanceof Error?e.message:'Could not open Google.');setBusy(false);}
   }
-  return <div className="fc-google"><button type="button" disabled={!enabled||busy} onClick={()=>void start()}><span className="fc-google-mark" aria-hidden="true">G</span>{busy?'Opening Google…':link?'Connect Google account':'Continue with Google'}</button>{!enabled&&<small>Google sign-in will be available after the project owner connects Google.</small>}{error&&<p className="fc-order-error" role="alert">{error}</p>}</div>;
+  return <div className="fc-google"><button type="button" disabled={!enabled||busy} onClick={()=>void start()}><span className="fc-google-mark" aria-hidden="true">G</span>{busy?'Opening Google…':link?'Connect Google account':'Continue with Google'}</button>{!enabled&&<small>Google sign-in is not available yet. You can use email and password.</small>}{error&&<p className="fc-order-error" role="alert">{error}</p>}</div>;
 }
 export function GoogleReturn() {
   const [message,setMessage]=useState(''),[failed,setFailed]=useState(false);

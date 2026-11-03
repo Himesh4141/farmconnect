@@ -1,9 +1,11 @@
+import { atomic } from './transaction.js';
 import { queueRefund, assertOrderPaid } from './payment-ledger.js';
 import { syncOrder } from './fulfillment.js';
 import { ApiError } from './pricing.js';
 import { requireUser,requireSameOrigin } from './auth.js';
 export function updateOrderAggregate(db,id){syncOrder(db,id);}
-function tx(db,fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(error){db.exec('ROLLBACK');throw error;}}
+function tx(db,fn){try { return atomic(db, () => {const result=fn();return result;
+}); } catch(error){throw error;}}
 export function mountFarmerWorkspace(app,db){
  const member=[requireUser(db),(req,_res,next)=>{if(req.user.requestedAccountType!=='farmer'||!req.user.farmId)throw new ApiError(403,'FARMER_REQUIRED','Use your farmer account.');next();}];
  const writable=(req,_res,next)=>{if(req.user.accessStatus==='suspended')throw new ApiError(403,'SUSPENDED','Contact the administrator about your suspended access.');next();};

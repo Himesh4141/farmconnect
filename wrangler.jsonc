@@ -1,0 +1,11 @@
+{
+  "name": "farmconnect-himesh4141",
+  "pages_build_output_dir": "./cloudflare/site",
+  "compatibility_date": "2026-10-29",
+  "services": [
+    {
+      "binding": "API",
+      "service": "farmconnect-api"
+    }
+  ]
+}

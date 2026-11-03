@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { assertOrderPaid, queueRefund } from './payment-ledger.js';
 import { ApiError } from './pricing.js';
 import { requireSameOrigin, requireUser } from './auth.js';
@@ -7,12 +8,12 @@ export function isAdmin(db,id){return Boolean(db.prepare('SELECT 1 FROM admin_us
 export function changeOrder(db,id,userId,body,admin=false){
  const status=body?.status;
  if(typeof status!=='string'||typeof body?.expectedStatus!=='string')throw new ApiError(400,'INVALID_STATUS','Choose a valid order action.');
- db.exec('BEGIN IMMEDIATE');
- try{
+
+ try { return atomic(db, () => {
   const row=admin?db.prepare('SELECT * FROM orders WHERE id=?').get(id):db.prepare('SELECT * FROM orders WHERE id=? AND user_id=?').get(id,userId);
   if(!row)throw new ApiError(404,'ORDER_NOT_FOUND','Order not found.');
   if(!admin&&status!=='cancelled')throw new ApiError(403,'NOT_ALLOWED','Customers can only cancel unconfirmed orders.');
-  if(row.status===status){const order=serialize(db,row);db.exec('COMMIT');return order;}
+  if(row.status===status){const order=serialize(db,row);return order;}
   const reason=admin&&status==='cancelled'?reasonFrom(body):'';
   if(row.status!==body.expectedStatus)throw new ApiError(409,'STATUS_CHANGED','Order status changed. Refresh and try again.');
   if(admin&&status!=='cancelled'&&db.prepare("SELECT 1 FROM farm_fulfillments ff JOIN account_profiles ap ON ap.farm_id=ff.farm_id WHERE ff.order_id=? LIMIT 1").get(id))throw new ApiError(409,'FARMER_MANAGED','Preparation is managed by each farmer. Pickup and delivery require a courier integration.');
@@ -37,8 +38,9 @@ export function changeOrder(db,id,userId,body,admin=false){
   queueRefund(db,id);
   db.prepare('INSERT INTO order_events(order_id,actor_id,status,created_at) VALUES (?,?,?,?)').run(id,userId,status,Date.now());
   if(admin&&status==='cancelled')audit(db,userId,'order_cancellation_reason',id,reason);
-  const order=serialize(db,db.prepare('SELECT * FROM orders WHERE id=?').get(id));db.exec('COMMIT');return order;
- }catch(error){db.exec('ROLLBACK');throw error;}
+  const order=serialize(db,db.prepare('SELECT * FROM orders WHERE id=?').get(id));return order;
+
+}); } catch(error){throw error;}
 }
 export function mountAdmin(app,db){
  const guard=[requireUser(db),(req,_res,next)=>{if(!isAdmin(db,req.user.id))throw new ApiError(403,'ADMIN_REQUIRED','Administrator access is required.');next();}];

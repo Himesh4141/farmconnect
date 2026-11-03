@@ -66,7 +66,7 @@ async function request(path: string, signal: AbortSignal, body?: unknown): Promi
   const timeout = window.setTimeout(() => {
     timedOut = true;
     controller.abort();
-  }, 10000);
+  }, 45000);
 
   try {
     const response = await fetch(path, {

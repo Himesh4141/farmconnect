@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { requireSameOrigin, requireUser } from './auth.js';
 import { isAdmin } from './admin.js';
@@ -26,15 +27,16 @@ export async function refreshExternal(db, provider, id) {
   const mapped = actual.statusType==='RT' || actual.statusType==='RTO' ? undefined : actual.status==='Delivered' && actual.statusType!=='DL' ? undefined : mapping[actual.status];
   // Unknown/return/failure states are visible, but never silently treated as successful delivery.
   const rank = ['pickup_requested', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered'];
-  db.exec('BEGIN IMMEDIATE');
-  try {
+
+  try { atomic(db, () => {
     const current = db.prepare('SELECT * FROM external_shipments WHERE id=?').get(id);
     const status = mapped && rank.indexOf(mapped) >= rank.indexOf(current.status) ? mapped : current.status;
     db.prepare('UPDATE external_shipments SET status=?,provider_status=?,last_checked_at=?,updated_at=? WHERE id=?').run(status, actual.status.slice(0,100), Date.now(), Date.now(), id);
     db.prepare('INSERT INTO external_shipment_events(shipment_id,status,provider_status,created_at) VALUES (?,?,?,?) ON CONFLICT DO NOTHING').run(id, status, actual.status.slice(0,100), Date.now());
     syncOrder(db, row.order_id);
-    db.exec('COMMIT');
-  } catch (error) { db.exec('ROLLBACK'); throw error; }
+
+
+}); } catch (error) {  throw error; }
 }
 
 export function mountOperations(app, db, config, provider) {
@@ -78,9 +80,9 @@ export function mountOperations(app, db, config, provider) {
     validate();
     const actual = await provider.track(waybill);
     if (actual.reference !== shipmentReference(orderId,farmId)) throw new ApiError(409, 'WRONG_SHIPMENT', 'Use the exact Farmconnect reference when creating the courier shipment.');
-    db.exec('BEGIN IMMEDIATE');
+
     let id;
-    try {
+    try { atomic(db, () => {
       validate();
       const existing = db.prepare('SELECT * FROM external_shipments WHERE order_id=? AND farm_id=?').get(orderId, farmId);
       if (existing && existing.waybill !== waybill) throw new ApiError(409, 'SHIPMENT_EXISTS', 'This farm order already has a courier shipment.');
@@ -88,8 +90,9 @@ export function mountOperations(app, db, config, provider) {
       id = existing?.id ?? randomUUID();
       if (!existing) db.prepare('INSERT INTO external_shipments(id,order_id,farm_id,provider,waybill,updated_at,created_by) VALUES (?,?,?,?,?,?,?)').run(id, orderId, farmId, 'delhivery', waybill, Date.now(), req.user.id);
       if (!existing) audit(db,req.user.id,'courier_connected',orderId+' / '+farmId,'Verified courier reference');
-      db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+
+
+}); } catch (error) {  throw error; }
     await refreshExternal(db, provider, id);
     res.json({ ok: true });
   });

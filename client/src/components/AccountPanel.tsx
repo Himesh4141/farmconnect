@@ -50,9 +50,9 @@ export default function AccountPanel({ auth, onSaved, onHelp, onOrders, onChecko
     <h2 id="dialog-title">{auth.user ? `Hello, ${auth.user.name}.` : mode === 'register' ? 'Good things start here.' : 'Fresh to see you again.'}</h2>
     {visibleError && <p ref={errorRef} tabIndex={-1} className="fc-error" role="alert" style={{ padding: "12px", background: "#fff1ec", border: "1px solid #d78770", borderRadius: "10px" }}>{visibleError}</p>}
     {auth.loading ? <p role="status">Checking your account…</p> : auth.user ? <>
-      <p>Your details, deliveries and account security in one place.</p>
+      <p>Your details, deliveries and account security in one place.</p><CustomerProfile auth={auth}/><AccountSecurity />
       <div className="fc-account-details"><small>ACCOUNT TYPE</small><span>{auth.user.accountType === "farmer" ? "Farmer account" : auth.user.accountType === "bulk_buyer" ? "Bulk-buyer account" : "Consumer account"}</span></div>
-      <div className="fc-account-shopping"><button className="fc-primary" onClick={onOrders}>My purchases</button><button className="fc-profile-outline" onClick={onSaved}>Saved products</button><button className="fc-profile-outline" onClick={onHelp}>Order help & requests</button></div><CustomerProfile auth={auth}/><AccountSecurity /><div className="fc-workspace-links"><a href="/farmer">Farmer workspace ↗</a><a href="/delivery">Delivery partner workspace ↗</a>{navigator.userAgent.includes('FarmconnectAndroid')&&<a href="farmconnect://settings">App connection & settings</a>}</div><button className="fc-account-switch" onClick={onApply}>Seller / business application and access</button>{auth.user.requestedAccountType === "farmer" && <button className="fc-primary" onClick={onFarmer}>Open farmer workspace</button>}{auth.user.accountType === "bulk_buyer" && <button className="fc-primary" onClick={onBulk}>Open business purchasing</button>}{canAdmin && <button className="fc-primary" onClick={onAdmin}>Manage store</button>}<button className="fc-account-switch" onClick={onCheckout}>Continue or retry checkout</button>
+      <div className="fc-account-shopping"><button className="fc-primary" onClick={onOrders}>My purchases</button><button className="fc-profile-outline" onClick={onSaved}>Saved products</button><button className="fc-profile-outline" onClick={onHelp}>Order help & requests</button></div><button className="fc-account-switch" onClick={onApply}>Seller / business application and access</button>{auth.user.requestedAccountType === "farmer" && <button className="fc-primary" onClick={onFarmer}>Open farmer workspace</button>}{auth.user.accountType === "bulk_buyer" && <button className="fc-primary" onClick={onBulk}>Open business purchasing</button>}{canAdmin && <button className="fc-primary" onClick={onAdmin}>Manage store</button>}<button className="fc-account-switch" onClick={onCheckout}>Continue or retry checkout</button>
       <button className="fc-primary" disabled={busy} onClick={submit}>{busy ? 'Signing out…' : 'Sign out'}<LogOut size={18}/></button>
     </> : <>
       <p>{mode === 'register' ? 'Create a shopping account. Seller and business access require a separate application and approval.' : 'Sign in to your grower-to-basket market.'}</p>
@@ -67,7 +67,6 @@ export default function AccountPanel({ auth, onSaved, onHelp, onOrders, onChecko
       </form>
       <button className="fc-account-switch" disabled={busy} onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setPassword(''); setValidationError(''); setSubmitted(false); }}>{mode === 'login' ? 'New here? Create an account' : 'Already a member? Sign in'}</button>
     </>}
-    {!auth.user&&!auth.loading&&<nav className="fc-workspace-links" aria-label="Partner sign in"><a href="/farmer">Farmer sign in ↗</a><a href="/delivery">Delivery partner sign in ↗</a></nav>}
     {busy && <p role="status">Contacting the server. Please wait…</p>}
   </section>;
 }

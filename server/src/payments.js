@@ -1,3 +1,4 @@
+import { atomic } from './transaction.js';
 import express from 'express';
 import { ApiError } from './pricing.js';
 import { requireSameOrigin, requireUser } from './auth.js';
@@ -7,9 +8,9 @@ import { queueRefund } from './payment-ledger.js';
 import { matchesSignature } from './providers.js';
 
 function transaction(db, fn) {
-  db.exec('BEGIN IMMEDIATE');
-  try { const result = fn(); db.exec('COMMIT'); return result; }
-  catch (error) { db.exec('ROLLBACK'); throw error; }
+
+  try { return atomic(db, () => { const result = fn();  return result;
+}); } catch (error) {  throw error; }
 }
 
 export function recordCaptured(db, payment) {
