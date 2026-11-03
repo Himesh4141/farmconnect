@@ -26,7 +26,7 @@ C:\Users\himes\Projects\Farmconnect
 
 The owner approved preserving this version, but the original project and original database were not overwritten. Continue in the deployment checkout.
 
-Git remote is `https://github.com/Himesh4141/farmconnect.git`. At the last check, local `main` was at `ff77b8e`, while `origin/main` had one newer commit `500875c`. The deployment checkout contains uncommitted changes. Inspect and fast-forward/reconcile before committing. Never force-push.
+Git remote is `https://github.com/Himesh4141/farmconnect.git`. The deployment changes are committed locally as `bd298b7` and merged with the remote checkout commit `500875c` in local merge commit `9413119`. Push was still pending when this handover was updated. Never force-push.
 
 ## What is deployed
 
