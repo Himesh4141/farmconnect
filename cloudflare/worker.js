@@ -43,11 +43,13 @@ export class FarmconnectDatabase extends DurableObject {
 }
 export default {
   fetch(request, env) {
-    if(!env.APP_ORIGIN || new URL(request.url).origin!==env.APP_ORIGIN)return Response.json({error:{message:'Use the official Farmconnect address.'}},{status:403});
+    const requestUrl=new URL(request.url);
+    const allowedOrigins=new Set([env.APP_ORIGIN,...(env.ALLOWED_ORIGINS||'').split(',').map(origin=>origin.trim())].filter(Boolean));
+    if(!allowedOrigins.has(requestUrl.origin))return Response.json({error:{message:'Use the official Farmconnect address.'}},{status:403});
     // This Worker is private: only the Pages service binding can call it in production.
     const headers=new Headers(request.headers);
     headers.delete('x-forwarded-host');
-    headers.set('x-forwarded-proto',new URL(env.APP_ORIGIN).protocol.slice(0,-1));
+    headers.set('x-forwarded-proto',requestUrl.protocol.slice(0,-1));
     return env.DATABASE.get(env.DATABASE.idFromName('farmconnect')).fetch(new Request(request,{headers}));
   },
 };

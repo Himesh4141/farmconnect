@@ -26,15 +26,17 @@ C:\Users\himes\Projects\Farmconnect
 
 The owner approved preserving this version, but the original project and original database were not overwritten. Continue in the deployment checkout.
 
-Git remote is `https://github.com/Himesh4141/farmconnect.git`. The deployment changes are committed locally as `bd298b7` and merged with the remote checkout commit `500875c` in local merge commit `9413119`. Push was still pending when this handover was updated. Never force-push.
+Git remote is `https://github.com/Himesh4141/farmconnect.git`. The deployment commits through `d84b939` were pushed to `main` on 3 November 2026. The latest Pages-name migration changes in this checkout still need a local commit and push. Never force-push.
 
 ## What is deployed
 
-Cloudflare Pages:
+Primary Cloudflare Pages address:
 
 ```text
-https://farmconnect-himesh4141.pages.dev
+https://farmconnect.pages.dev
 ```
+
+The owner requested the shorter Pages address. Cloudflare does not permit changing an existing `pages.dev` subdomain, so a second Pages project named `farmconnect` was created and deployed. The previous project remains available as a fallback at `https://farmconnect-himesh4141.pages.dev`. The API Worker accepts both origins during this transition. See [Cloudflare Pages known issues](https://developers.cloudflare.com/pages/platform/known-issues/).
 
 Cloudflare API Worker:
 
@@ -48,9 +50,9 @@ Cloudflare account ID:
 958710c499dde27ae9abe0e7fbc795b6
 ```
 
-The public Pages site and API were deployed on 3 November 2026. The public verification script passed `/`, `/farmer`, `/delivery`, `/api/health`, `/api/catalog`, and `/api/store/config`. Health returned `200`, application `Farmconnect`, and database `connected`. The catalogue returns 7 products in 4 categories. An unauthenticated request to `/api/business/catalog` returned `401`.
+The primary site, fallback site, and API were deployed on 3 November 2026. The public verification script passed `/`, `/farmer`, `/delivery`, `/api/health`, `/api/catalog`, and `/api/store/config` on both Pages addresses. Health returned `200`, application `Farmconnect`, and database `connected`. The catalogue returns 7 products in 4 categories. An unauthenticated request to `/api/business/catalog` returned `401`.
 
-The root `wrangler.jsonc` is the Pages configuration and declares the private API service binding. `cloudflare/wrangler.jsonc` configures the API Worker and SQLite Durable Object. Wrangler v4.155 rejects a custom `--config` path on `pages deploy`; deploy Pages from the repo root so it reads root `wrangler.jsonc`:
+The root `wrangler.jsonc` is the primary Pages configuration (`farmconnect`) and declares the private API service binding. `cloudflare/wrangler.jsonc` configures the API Worker and SQLite Durable Object, with `APP_ORIGIN=https://farmconnect.pages.dev` and the previous Pages origin in `ALLOWED_ORIGINS`. Wrangler v4.155 rejects a custom `--config` path on `pages deploy`; deploy Pages from the repo root so it reads root `wrangler.jsonc`:
 
 ```powershell
 $env:XDG_CONFIG_HOME = Join-Path (Get-Location) 'deploy/private/cloudflare'
@@ -82,7 +84,7 @@ The token has already been revoked in Cloudflare. The JSON file contains account
 
 ## Android APK
 
-A release APK was built with the existing signing key, version code `5`, version `0.4.2`, and HTTPS origin `https://farmconnect-himesh4141.pages.dev`. Signature verification passed for APK v2 and v3. The APK build script’s public-site checks passed before the database transfer; frontend assets did not change afterward.
+A release APK was rebuilt with the existing signing key, version code `6`, version `0.4.3`, and HTTPS origin `https://farmconnect.pages.dev`. Signature verification passed for APK v2 and v3. The public-site readiness checks passed against the new primary address during this build.
 
 File:
 
@@ -93,7 +95,7 @@ android/Farmconnect-release.apk
 SHA-256:
 
 ```text
-31421BE93248179BE314119C445D1954186A48B6537491C00CA487E8874BE1EF
+287D4103BD23A03D1204C23F64CEC77F8B1BB9509DF83357EBFBD24158250F76
 ```
 
 No Android device was connected during the build. Physical installation and role-workflow testing remain outstanding. Preserve the existing key under `farmconnect-farmer-module/deploy/private/android-release`; never commit it or its password.
@@ -114,11 +116,11 @@ The backend regression suite last recorded 103/103 tests passing on 2 November 2
 
 1. Manually delete the two temporary transfer files listed above; the Cloudflare token is already revoked.
 2. Sign in to the Pages site with the existing owner account; confirm the admin panel and listing visibility.
-3. Reconcile the separate Render/Turso records with the Cloudflare snapshot; do not overwrite either database blindly.
+3. Keep the old Pages address and Render service available until the owner has tested sign-in and the integrated journey on the new address.
 4. Set up Google OAuth only after creating Farmconnect’s own Google client and registering the production callback:
 
    ```text
-   https://farmconnect-himesh4141.pages.dev/api/auth/google/callback
+   https://farmconnect.pages.dev/api/auth/google/callback
    ```
 
 5. Obtain real payment and courier provider accounts before enabling those services. Keep online checkout disabled until a verified fulfillment path exists.

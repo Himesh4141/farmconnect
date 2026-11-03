@@ -9,7 +9,8 @@
     "NODE_ENV": "production",
     "COURIER_MODE": "disabled",
     "CHECKOUT_ENABLED": "false",
-    "APP_ORIGIN": "https://farmconnect-himesh4141.pages.dev"
+    "APP_ORIGIN": "https://farmconnect.pages.dev",
+    "ALLOWED_ORIGINS": "https://farmconnect-himesh4141.pages.dev"
   },
   "durable_objects": {
     "bindings": [
